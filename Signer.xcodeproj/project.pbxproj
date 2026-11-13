@@ -17,6 +17,7 @@
 		47268076EB4E1B7843E774AE /* SigningLogDelivery.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE5CF943710CC193FBB951E2 /* SigningLogDelivery.swift */; };
 		474BD785D003E8B8D2B617C1 /* NativeActionToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89E4FEFEA57BFB5F5CCD2862 /* NativeActionToolbar.swift */; };
 		47CADBE0B20CB7EDDDF4538E /* AppIconCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F6B6A77B274FC6BAD06C32 /* AppIconCache.swift */; };
+		5603B6A4358221551C867F9C /* SigningIconEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7A7655278BE1F2D82F0277F /* SigningIconEditor.swift */; };
 		5E121DF7E4484860EF22D138 /* AppsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9FBAE5DF8D539FB69700F09 /* AppsView.swift */; };
 		63599FF0283BF10D9A7D4372 /* ThirdPartyNotices.txt in Resources */ = {isa = PBXBuildFile; fileRef = 59BDB8DAA2E06092D31FE98D /* ThirdPartyNotices.txt */; };
 		645A86993B1917F50DCE3EB1 /* ProgressDelivery.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF15A10EAE5454C008DB2840 /* ProgressDelivery.swift */; };
@@ -82,6 +83,7 @@
 		EE5CF943710CC193FBB951E2 /* SigningLogDelivery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SigningLogDelivery.swift; sourceTree = "<group>"; };
 		EF15A10EAE5454C008DB2840 /* ProgressDelivery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressDelivery.swift; sourceTree = "<group>"; };
 		F5995DBBB48458436E52CF0F /* SourcesDownloadsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourcesDownloadsView.swift; sourceTree = "<group>"; };
+		F7A7655278BE1F2D82F0277F /* SigningIconEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SigningIconEditor.swift; sourceTree = "<group>"; };
 		F9097BC223A4E6D156EDA829 /* FilesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilesView.swift; sourceTree = "<group>"; };
 		FDF3CDE5ADAFBD1ECD02EACE /* WorkspacePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspacePicker.swift; sourceTree = "<group>"; };
 		FE798596C7871265CF56BEE2 /* OperationPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OperationPresentation.swift; sourceTree = "<group>"; };
@@ -171,6 +173,7 @@
 				F9097BC223A4E6D156EDA829 /* FilesView.swift */,
 				DA76F46409851D32F5DC4112 /* RootView.swift */,
 				21F206D564728472FC48EEF9 /* SettingsView.swift */,
+				F7A7655278BE1F2D82F0277F /* SigningIconEditor.swift */,
 				540BB8390F87F9A298AE4A36 /* SigningProcessView.swift */,
 				2B9EBECF9DB0081DE5F79967 /* SigningView.swift */,
 				F5995DBBB48458436E52CF0F /* SourcesDownloadsView.swift */,
@@ -302,6 +305,7 @@
 				ADA737A89B968CF29684724C /* SettingsView.swift in Sources */,
 				8D036321F98710893BB1633C /* SignerApp.swift in Sources */,
 				F8EB75AC0ADDA4994CD804FB /* SigningActionButton.swift in Sources */,
+				5603B6A4358221551C867F9C /* SigningIconEditor.swift in Sources */,
 				47268076EB4E1B7843E774AE /* SigningLogDelivery.swift in Sources */,
 				97A900AA4AD10C46DBB3AF59 /* SigningNavigation.swift in Sources */,
 				21114017EC14D382AB6B809F /* SigningOutput.swift in Sources */,
@@ -350,7 +354,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 20;
+				CURRENT_PROJECT_VERSION = 21;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
@@ -414,7 +418,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 20;
+				CURRENT_PROJECT_VERSION = 21;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

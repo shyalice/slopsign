@@ -165,7 +165,13 @@ public final class Workspace: @unchecked Sendable {
       let onlyBundle = try owned && fm.contentsOfDirectory(atPath: parent.path) == [bundle.lastPathComponent]
       targets.append(try removable(onlyBundle ? parent : bundle))
     }
-    for target in targets { try NativeFiles.remove(target, progress: progress) }
+    progress?.totalUnitCount = Int64(targets.count)
+    for target in targets {
+      let child = Progress(totalUnitCount: 1)
+      progress?.addChild(child, withPendingUnitCount: 1)
+      try NativeFiles.remove(target, progress: child)
+      child.completedUnitCount = child.totalUnitCount
+    }
   }
   public func copy(_ url: URL, to directory: URL, move: Bool, progress: Progress? = nil) throws {
     let url = try confined(url)

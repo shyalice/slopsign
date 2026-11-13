@@ -419,7 +419,7 @@ final class AppStore: ObservableObject {
   func deleteApps(_ ids: Set<UUID>) {
     if deferUntilCancellationFinishes({ [weak self] in self?.deleteApps(ids) }) { return }
     let targets = apps.filter { ids.contains($0.id) }
-    guard !targets.isEmpty, let current = beginOperation("Deleting Apps", inDialog: false) else { return }
+    guard !targets.isEmpty, let current = beginOperation("Deleting Apps") else { return }
     let ws = workspace
     Task {
       let result = await Task.detached(priority: .userInitiated) {
@@ -427,9 +427,14 @@ final class AppStore: ObservableObject {
         current.totalUnitCount = Int64(targets.count)
         for app in targets {
           if current.isCancelled { break }
-          do { try ws.removeAppFiles(app, progress: current); removed.insert(app.id) }
-          catch { failures.append(app.name + ": " + error.localizedDescription) }
-          current.completedUnitCount += 1
+          let itemProgress = Progress(totalUnitCount: 1)
+          current.addChild(itemProgress, withPendingUnitCount: 1)
+          do { try ws.removeAppFiles(app, progress: itemProgress); removed.insert(app.id) }
+          catch {
+            if FileTransfer.isCancelled(error) { break }
+            failures.append(app.name + ": " + error.localizedDescription)
+          }
+          itemProgress.completedUnitCount = itemProgress.totalUnitCount
         }
         return (removed, failures)
       }.value

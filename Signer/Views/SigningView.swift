@@ -10,7 +10,6 @@ struct SigningView: View {
   @State private var options = SigningOptions()
   @State private var certificateID: UUID?
   @State private var importing = false
-  @State private var importKind = "libraries"
   @State private var libraries: [String] = []
   @State private var request: SigningRequest?
   @State private var libraryPicker = false
@@ -18,6 +17,10 @@ struct SigningView: View {
   @State private var showOverrides = false
   @State private var localError: String?
   @State private var started = false
+  @State private var editingIcon = false
+  @State private var originalIcon: UIImage?
+  @State private var selectedIcon: UIImage?
+  @State private var managedIcon: URL?
   var certificate: CertificateRecord? { store.certificates.first { $0.id == certificateID } }
   var body: some View {
     Form {
@@ -30,21 +33,17 @@ struct SigningView: View {
         LabeledContent("Version") {
           TextField("Version", text: $options.version).keyboardType(.numbersAndPunctuation).multilineTextAlignment(.trailing)
         }
-        Button {
-          importKind = "icon"
-          importing = true
-        } label: {
+        Button { editingIcon = true } label: {
           HStack {
-            Text("App Icon")
+            Text("App Icon").foregroundStyle(.primary)
             Spacer()
-            if options.iconPath != nil {
-              Image(systemName: "checkmark.circle.fill").foregroundStyle(.blue)
-            }
-          }
-        }
-        if options.iconPath != nil {
-          Button("Reset App Icon", role: .destructive) { options.iconPath = nil }
-        }
+            if let image = selectedIcon ?? originalIcon {
+              Image(uiImage: image).resizable().scaledToFill().frame(width: 56, height: 56)
+                .clipShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
+            } else { AppGlyph(url: try? store.workspace.resolve(app.relativePath), size: 56) }
+            Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(.tertiary)
+          }.padding(.vertical, 4)
+        }.accessibilityIdentifier("signing.icon")
       }
       Section {
         Toggle("Install After Signing", isOn: Binding(get: { options.installAfterSigning == true }, set: { options.installAfterSigning = $0 }))
@@ -125,7 +124,6 @@ struct SigningView: View {
           }
         }
         Button {
-          importKind = "entitlements"
           importing = true
         } label: {
           LabeledContent(
@@ -172,6 +170,24 @@ struct SigningView: View {
     }
     .onAppear { store.signingTab = store.selectedTab }
     .onDisappear { if request == nil { store.signingTab = nil } }
+    .sheet(isPresented: $editingIcon) {
+      SigningIconEditor(original: originalIcon, current: selectedIcon ?? originalIcon, custom: options.iconPath != nil) { image in
+        do {
+          if let image {
+            let folder = store.workspace.files.appendingPathComponent(".SigningIcons")
+            try store.workspace.fm.createDirectory(at: folder, withIntermediateDirectories: true)
+            let file = managedIcon ?? folder.appendingPathComponent(UUID().uuidString + ".png")
+            try IconArtwork.png(image).write(to: file, options: .atomic)
+            managedIcon = file
+            options.iconPath = store.workspace.relative(file)
+            selectedIcon = image
+          } else {
+            options.iconPath = nil; selectedIcon = nil
+            if let file = managedIcon { try? store.workspace.fm.removeItem(at: file); managedIcon = nil }
+          }
+        } catch { localError = error.localizedDescription }
+      }
+    }
     .sheet(isPresented: $libraryPicker) {
       WorkspacePicker(title: "Add Library", extensions: ["dylib", "framework", "deb"], multiple: true,
         initialSelection: Set(options.libraries.compactMap { try? store.workspace.resolve($0) })) { urls in
@@ -188,26 +204,19 @@ struct SigningView: View {
       certificateID =
         UUID(uuidString: store.defaultCertificate)
         ?? store.certificates.first(where: { !$0.isExpired })?.id
+      if let path = options.iconPath, let file = try? store.workspace.resolve(path), let data = try? Data(contentsOf: file) {
+        selectedIcon = IconArtwork.decode(data)
+      }
       if let url = try? store.workspace.resolve(app.relativePath) {
+        if let data = await AppIconCache.shared.data(for: url) { originalIcon = IconArtwork.decode(data) }
         do { libraries = try await store.engine.libraries(for: url) } catch {
           localError = error.localizedDescription
         }
       }
     }
     .sheet(isPresented: $importing) {
-      WorkspacePicker(title: importKind == "icon" ? "Choose Icon" : "Choose Entitlements",
-        extensions: importKind == "icon" ? ["png", "jpg", "jpeg", "heic"] : ["plist", "xml", "entitlements"]) { urls in
-        guard let dest = urls.first else { return }
-        do {
-          if importKind == "icon" {
-            guard let image = UIImage(contentsOfFile: dest.path) else { throw SignerError("Unable to read the image.") }
-            let renderer = UIGraphicsImageRenderer(size: CGSize(width: 180, height: 180))
-            let png = renderer.pngData { _ in image.draw(in: CGRect(x: 0, y: 0, width: 180, height: 180)) }
-            let file = store.workspace.unique("SignerIcon.png", in: store.workspace.files)
-            try png.write(to: file)
-            options.iconPath = store.workspace.relative(file)
-          } else { options.entitlementsPath = store.workspace.relative(dest) }
-        } catch { localError = error.localizedDescription }
+      WorkspacePicker(title: "Choose Entitlements", extensions: ["plist", "xml", "entitlements"]) { urls in
+        if let file = urls.first { options.entitlementsPath = store.workspace.relative(file) }
       }
     }
     .sheet(isPresented: $showOverrides) {

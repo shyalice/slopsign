@@ -120,12 +120,14 @@ struct FilesView: View {
         let targets = deletionTargets
         let ws = store.workspace
         selection = []
-        store.perform("Deleting Files", inDialog: false) { progress in
+        store.perform("Deleting Files") { progress in
           progress.totalUnitCount = Int64(targets.count)
           for url in targets {
             try FileTransfer.check(progress)
-            try ws.remove(url, progress: progress)
-            progress.completedUnitCount += 1
+            let itemProgress = Progress(totalUnitCount: 1)
+            progress.addChild(itemProgress, withPendingUnitCount: 1)
+            try ws.remove(url, progress: itemProgress)
+            itemProgress.completedUnitCount = itemProgress.totalUnitCount
           }
         }
       }

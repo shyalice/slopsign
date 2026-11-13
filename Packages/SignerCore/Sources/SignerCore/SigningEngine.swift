@@ -111,6 +111,8 @@ public actor SigningEngine {
       info["CFBundleIcons"] = ["CFBundlePrimaryIcon": ["CFBundleIconFiles": ["SignerIcon"]]]
       info["CFBundleIcons~ipad"] = info["CFBundleIcons"]
       info["CFBundleIconFiles"] = ["SignerIcon"]
+      info.removeValue(forKey: "CFBundleIconName")
+      info.removeValue(forKey: "CFBundleIconFile")
     }
     let signingProfile: [String: Any]?
     if !options.modifyOnly, let certificate {

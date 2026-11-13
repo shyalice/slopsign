@@ -278,6 +278,11 @@ static int remove_confirm(removefile_state_t state,const char *path,void *contex
     SGWork *work=context;
     return tick(work,0)?REMOVEFILE_STOP:REMOVEFILE_PROCEED;
 }
+static int remove_status(removefile_state_t state,const char *path,void *context) {
+    SGWork *work=context;
+    work->done++;
+    return tick(work,0)?REMOVEFILE_STOP:REMOVEFILE_PROCEED;
+}
 int SGRemoveTree(const char *path,SGArchiveProgress callback,void *context,char *error,size_t size) {
     SGWork work={callback,context,0,0,0};
     if(tick(&work,1))return 2;
@@ -287,16 +292,35 @@ int SGRemoveTree(const char *path,SGArchiveProgress callback,void *context,char 
         if(unlink(path))return fail(error,size,strerror(errno));
         return 0;
     }
+    // Count entries without allocating a Foundation object/Progress per file.
+    // This supplies real deletion percentages to the native Cancel alert.
+    char *roots[]={(char *)path,NULL};
+    FTS *walk=fts_open(roots,FTS_PHYSICAL|FTS_NOCHDIR|FTS_XDEV|FTS_NOSTAT,NULL);
+    if(!walk)return fail(error,size,strerror(errno));
+    FTSENT *entry;
+    while((entry=fts_read(walk))) {
+        if(entry->fts_info==FTS_DP)continue;
+        if(entry->fts_info==FTS_ERR||entry->fts_info==FTS_DNR||entry->fts_info==FTS_NS){
+            int saved=entry->fts_errno;fts_close(walk);return fail(error,size,strerror(saved));
+        }
+        work.total++;
+        if(tick(&work,0)){fts_close(walk);return 2;}
+    }
+    fts_close(walk);
+    if(tick(&work,1))return 2;
     removefile_state_t state=removefile_state_alloc();
     if(!state)return fail(error,size,"Unable to allocate file deletion state.");
     removefile_state_set(state,REMOVEFILE_STATE_CONFIRM_CALLBACK,remove_confirm);
     removefile_state_set(state,REMOVEFILE_STATE_CONFIRM_CONTEXT,&work);
+    removefile_state_set(state,REMOVEFILE_STATE_STATUS_CALLBACK,remove_status);
+    removefile_state_set(state,REMOVEFILE_STATE_STATUS_CONTEXT,&work);
     int result=removefile(path,state,REMOVEFILE_RECURSIVE);
     int saved=errno;removefile_state_free(state);
     if(result){if(tick(&work,1))return 2;return fail(error,size,strerror(saved));}
     // Completion means all filesystem entries were removed; there is no
     // private trash directory or pending background purge after this returns.
-    if(lstat(path,&info)==0)return fail(error,size,"The item could not be fully deleted.");
+    if(lstat(path,&info)==0){if(tick(&work,1))return 2;return fail(error,size,"The item could not be fully deleted.");}
     if(errno!=ENOENT)return fail(error,size,strerror(errno));
+    work.done=work.total;tick(&work,1);
     return 0;
 }
